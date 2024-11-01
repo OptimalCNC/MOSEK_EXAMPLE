@@ -1,0 +1,32 @@
+name: Test on Windows
+
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+  pull_request:
+
+jobs:
+  test-on-windows:
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        config: [Release, Debug]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install MOSEK
+      shell: pwsh
+      run: |
+        Invoke-WebRequest -Uri https://download.mosek.com/stable/10.2.6/moseksetupwin64x86.msi -OutFile moseksetupwin64x86.msi
+        msiexec /i moseksetupwin64x86.msi /quiet
+
+    - name: Build
+      shell: pwsh
+      run: |
+        $env:MOSEKLM_LICENSE_FILE="${{ secrets.MOSEK_LICENSE }}"
+        $env:PATH="$env:PATH;C:\Program Files\Mosek\10.2\tools\platform\win64x86\bin"
+        cmake -S. -Bbuild
+        cmake --build build --config ${{ matrix.config }}
+        ctest --test-dir build
