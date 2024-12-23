@@ -24,9 +24,10 @@ jobs:
 
     - name: Build
       shell: pwsh
+      env:
+        MOSEKLM_LICENSE_FILE: ${{ secrets.MOSEKLM_LICENSE_FILE }}
       run: |
-        $env:MOSEKLM_LICENSE_FILE="${{ secrets.MOSEK_LICENSE }}"
         $env:PATH="$env:PATH;C:\Program Files\Mosek\10.2\tools\platform\win64x86\bin"
         cmake -S. -Bbuild
         cmake --build build --config ${{ matrix.config }}
-        ctest --test-dir build
+        ctest --test-dir build --output-on-failure
